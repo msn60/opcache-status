@@ -533,29 +533,36 @@ class OpCacheDataModel
         // 5. Wasted Memory
         $currentWasted = $mem['current_wasted_percentage'];
         $maxWasted = (float)$config['opcache.max_wasted_percentage'] * 100;
-        $wastedBar = $maxWasted > 0 ? min(($currentWasted / $maxWasted) * 100, 100) : 0;
-        if ($currentWasted >= $maxWasted) {
-            $wastedStatus = 'red';
-        } elseif ($currentWasted >= $maxWasted * 0.5) {
-            $wastedStatus = 'yellow';
+        if ($maxWasted <= 0) {
+            $checks[] = [
+                'name' => 'Wasted Memory',
+                'directive' => 'opcache.max_wasted_percentage',
+                'utilization' => 0,
+                'status' => 'green',
+                'detail' => number_format($currentWasted, 1) . '% wasted — auto-reset threshold disabled',
+                'suggestion' => '',
+            ];
         } else {
-            $wastedStatus = 'green';
+            $wastedBar = min(($currentWasted / $maxWasted) * 100, 100);
+            if ($currentWasted >= $maxWasted) {
+                $wastedStatus = 'red';
+                $wastedSuggestion = 'Wasted memory has reached the auto-reset threshold. If the cache fills up, OPcache will reset automatically to reclaim this orphaned space. High waste typically means scripts are being frequently invalidated or recompiled — check deploy processes and whether opcache.validate_timestamps is enabled in production.';
+            } elseif ($currentWasted >= $maxWasted * 0.5) {
+                $wastedStatus = 'yellow';
+                $wastedSuggestion = 'Wasted memory is approaching the auto-reset threshold (' . number_format($maxWasted, 1) . '%). If the cache fills up before waste is reclaimed, OPcache will trigger an automatic reset.';
+            } else {
+                $wastedStatus = 'green';
+                $wastedSuggestion = '';
+            }
+            $checks[] = [
+                'name' => 'Wasted Memory',
+                'directive' => 'opcache.max_wasted_percentage',
+                'utilization' => round($wastedBar, 1),
+                'status' => $wastedStatus,
+                'detail' => number_format($currentWasted, 1) . '% wasted — auto-reset triggers at ' . number_format($maxWasted, 1) . '%',
+                'suggestion' => $wastedSuggestion,
+            ];
         }
-        if ($currentWasted >= $maxWasted) {
-            $wastedSuggestion = 'Wasted memory has reached the auto-reset threshold. If the cache fills up, OPcache will reset automatically to reclaim this orphaned space. High waste typically means scripts are being frequently invalidated or recompiled — check deploy processes and whether opcache.validate_timestamps is enabled in production.';
-        } elseif ($wastedStatus === 'yellow') {
-            $wastedSuggestion = 'Wasted memory is approaching the auto-reset threshold (' . number_format($maxWasted, 1) . '%). If the cache fills up before waste is reclaimed, OPcache will trigger an automatic reset.';
-        } else {
-            $wastedSuggestion = '';
-        }
-        $checks[] = [
-            'name' => 'Wasted Memory',
-            'directive' => 'opcache.max_wasted_percentage',
-            'utilization' => round($wastedBar, 1),
-            'status' => $wastedStatus,
-            'detail' => number_format($currentWasted, 1) . '% wasted — auto-reset triggers at ' . number_format($maxWasted, 1) . '%',
-            'suggestion' => $wastedSuggestion,
-        ];
 
         // 6. Hit Rate
         $hitRate = $stats['opcache_hit_rate'];
