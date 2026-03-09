@@ -559,7 +559,7 @@ class OpCacheDataModel
                 'directive' => 'opcache.max_wasted_percentage',
                 'utilization' => round($wastedBar, 1),
                 'status' => $wastedStatus,
-                'detail' => number_format($currentWasted, 1) . '% wasted — auto-reset triggers at ' . number_format($maxWasted, 1) . '%',
+                'detail' => number_format($currentWasted, 1) . '% wasted — auto-reset triggers at ' . number_format($maxWasted, 1) . '% on cache-full',
                 'suggestion' => $wastedSuggestion,
             ];
         }
