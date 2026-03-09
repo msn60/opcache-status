@@ -532,6 +532,7 @@ class OpCacheDataModel
 
         // 5. Wasted Memory
         $currentWasted = $mem['current_wasted_percentage'];
+        $wastedBytes = $this->sizeForHumansPlain($mem['wasted_memory']);
         $maxWasted = (float)$config['opcache.max_wasted_percentage'] * 100;
         if ($maxWasted <= 0) {
             $checks[] = [
@@ -539,7 +540,7 @@ class OpCacheDataModel
                 'directive' => 'opcache.max_wasted_percentage',
                 'utilization' => 0,
                 'status' => 'green',
-                'detail' => number_format($currentWasted, 1) . '% wasted — auto-reset threshold disabled',
+                'detail' => $wastedBytes . ' wasted — auto-reset threshold disabled',
                 'suggestion' => '',
             ];
         } else {
@@ -559,7 +560,7 @@ class OpCacheDataModel
                 'directive' => 'opcache.max_wasted_percentage',
                 'utilization' => round($wastedBar, 1),
                 'status' => $wastedStatus,
-                'detail' => number_format($currentWasted, 1) . '% wasted — auto-reset triggers at ' . number_format($maxWasted, 1) . '% on cache-full',
+                'detail' => $wastedBytes . ' wasted — auto-reset triggers at ' . number_format($maxWasted, 1) . '%',
                 'suggestion' => $wastedSuggestion,
             ];
         }
